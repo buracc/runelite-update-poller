@@ -33,12 +33,13 @@ class MavenRepoPoller(
         )
 
         if (repository.isNewer(releaseArtifact)) {
+            println("new release artifact")
             repository.save(releaseArtifact)
         }
 
         // Snapshots
         val snapshotMetadata = mapper.readValue(
-            URL("${properties.mavenRepo.url}/$latestRelease/maven-metadata.xml"),
+            URL("${properties.mavenRepo.url}/${versions.getLatest()}/maven-metadata.xml"),
             MavenMetadata::class.java
         )
         val latestSnapshot = snapshotMetadata.versioning.snapshotVersions?.getLatest()
@@ -51,6 +52,7 @@ class MavenRepoPoller(
         )
 
         if (repository.isNewer(snapshotArtifact)) {
+            println("new snapshot artifact")
             repository.save(snapshotArtifact)
         }
     }

@@ -1,13 +1,16 @@
 package com.github.buracc.runeliteupdatepoller.repository.entities
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.github.buracc.runeliteupdatepoller.util.Hashing
 import org.apache.maven.artifact.versioning.ComparableVersion
 
 data class Artifact(
     val fileName: String,
     val version: String,
+    @JsonIgnore
     val data: ByteArray
 ) : Comparable<Artifact> {
+    @JsonIgnore
     private val comparableVersion = ComparableVersion(version)
     val hash = Hashing.getSha256(data)
 
