@@ -1,16 +1,19 @@
 package com.github.buracc.runeliteupdatepoller.repository.entities
 
-import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import com.github.buracc.runeliteupdatepoller.mapping.ArtifactDeserializer
+import com.github.buracc.runeliteupdatepoller.rest.dto.ArtifactDto
 import com.github.buracc.runeliteupdatepoller.util.Hashing
 import org.apache.maven.artifact.versioning.ComparableVersion
+import java.net.URL
 
+@JsonDeserialize(using = ArtifactDeserializer::class)
 data class Artifact(
     val fileName: String,
     val version: String,
-    @JsonIgnore
+    val originUrl: URL,
     val data: ByteArray
 ) : Comparable<Artifact> {
-    @JsonIgnore
     private val comparableVersion = ComparableVersion(version)
     val hash = Hashing.getSha256(data)
 
@@ -31,5 +34,14 @@ data class Artifact(
 
     override fun hashCode(): Int {
         return hash.hashCode()
+    }
+
+    fun toDto(): ArtifactDto {
+        return ArtifactDto(
+            fileName,
+            version,
+            hash,
+            originUrl
+        )
     }
 }

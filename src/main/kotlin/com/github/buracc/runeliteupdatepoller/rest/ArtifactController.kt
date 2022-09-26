@@ -14,12 +14,16 @@ import javax.servlet.http.HttpServletResponse
 class ArtifactController(
     private val artifactRepository: ArtifactRepository
 ) {
-    @GetMapping
-    fun getAll() = artifactRepository.artifacts
+    @GetMapping(produces = ["application/json"])
+    fun getAll() = artifactRepository.artifacts.values.map { it.toDto() }
 
     @GetMapping("/latest", produces = ["application/json"])
     fun getLatest(@RequestParam(required = false) snapshot: Boolean?) = ResponseEntity.of(
-        Optional.ofNullable(artifactRepository.getLatest(snapshot ?: false))
+        Optional.ofNullable(
+            artifactRepository.getLatest(snapshot ?: false).run {
+                this?.toDto()
+            }
+        )
     )
 
     @GetMapping("/latest/download", produces = ["application/octet-stream"])

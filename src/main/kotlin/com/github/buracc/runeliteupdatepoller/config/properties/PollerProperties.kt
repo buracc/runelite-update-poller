@@ -6,11 +6,8 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties(prefix = "poller")
 data class PollerProperties(
-    val mavenRepo: MavenRepo
-) {
-    @ConstructorBinding
-    data class MavenRepo(
-        val cron: String,
-        val url: String
-    )
-}
+    val cron: String,
+    val url: String,
+    val cacheDirectory: String,
+    val webhookUrl: String
+)

@@ -2,42 +2,35 @@ package com.github.buracc.runeliteupdatepoller.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.buracc.runeliteupdatepoller.config.properties.PollerProperties
 import com.github.buracc.runeliteupdatepoller.repository.entities.Artifact
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.io.File
 import java.io.FileReader
 import java.nio.file.Files
-import java.nio.file.Path
 
 @Repository
 class ArtifactRepository(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val properties: PollerProperties
 ) {
-    private val cacheFilePath = "artifacts.json"
+    private val cacheFileName = "artifacts.json"
     private val log = LoggerFactory.getLogger(javaClass)
     val artifacts = mutableMapOf<String, Artifact>()
 
     fun save(artifact: Artifact) {
         try {
-            artifacts[artifact.version] = artifact
-            Files.write(Path.of(artifact.fileName), artifact.data)
-            Files.writeString(Path.of(cacheFilePath), objectMapper.writeValueAsString(artifacts))
+            saveArtifact(artifact)
+            saveCacheFile()
         } catch (e: Exception) {
             log.error("Failed to save artifact", e)
         }
     }
 
     fun isNewer(latest: Artifact): Boolean {
-        if (artifacts.isEmpty() && Files.exists(Path.of(cacheFilePath))) {
-            val cache = objectMapper.readValue(
-                FileReader(cacheFilePath),
-                object : TypeReference<MutableMap<String, Artifact>>() {}
-            )
-            if (cache != null) {
-                artifacts.putAll(cache)
-            }
-        }
+        loadCacheFile()
 
         val current = artifacts[latest.version]
         return current == null || current < latest || current.hash != latest.hash
@@ -48,5 +41,37 @@ class ArtifactRepository(
             .filter { snapshot || !it.key.contains("-SNAPSHOT") }
             .maxByOrNull { ComparableVersion(it.key) }
             ?.value
+    }
+
+    private fun loadCacheFile() {
+        val file = File(properties.cacheDirectory, cacheFileName)
+        file.parentFile.mkdir()
+        if (artifacts.isEmpty() && file.exists()) {
+            val cache = objectMapper.readValue(
+                FileReader(file),
+                object : TypeReference<MutableMap<String, Artifact>>() {}
+            )
+            if (cache != null) {
+                artifacts.putAll(cache)
+            }
+        }
+    }
+
+    private fun saveArtifact(artifact: Artifact) {
+        val file = File(properties.cacheDirectory, artifact.fileName)
+        artifacts[artifact.version] = artifact
+        file.parentFile.mkdir()
+        Files.write(file.toPath(), artifact.data)
+    }
+
+    private fun saveCacheFile() {
+        Files.writeString(
+            File(properties.cacheDirectory, cacheFileName).toPath(),
+            objectMapper
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(
+                    artifacts.mapValues { (_, v) -> v.toDto() }
+                )
+        )
     }
 }
