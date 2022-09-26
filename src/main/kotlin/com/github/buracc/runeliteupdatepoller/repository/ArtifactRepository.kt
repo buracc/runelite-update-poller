@@ -3,6 +3,7 @@ package com.github.buracc.runeliteupdatepoller.repository
 import com.github.buracc.runeliteupdatepoller.repository.entities.Artifact
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -20,8 +21,24 @@ class ArtifactRepository {
         }
     }
 
-    fun isNewer(artifact: Artifact): Boolean {
-        val current = artifacts.putIfAbsent(artifact.fileName, artifact) ?: error("")
-        return current < artifact
+    fun isNewer(latest: Artifact): Boolean {
+        var current = artifacts[latest.fileName]
+        if (current == null) {
+            val bytes = try {
+                Files.readAllBytes(Path.of(latest.fileName))
+            } catch (ex: IOException) {
+                null
+            }
+
+            if (bytes != null) {
+                current = Artifact(
+                    latest.fileName,
+                    latest.version,
+                    bytes
+                )
+            }
+        }
+
+        return current == null || current < latest || current.hash != latest.hash
     }
 }

@@ -1,14 +1,15 @@
 package com.github.buracc.runeliteupdatepoller.repository.entities
 
+import com.github.buracc.runeliteupdatepoller.util.Hashing
 import org.apache.maven.artifact.versioning.ComparableVersion
 
 data class Artifact(
     val fileName: String,
-    val version: String?,
-    val hash: String?,
+    val version: String,
     val data: ByteArray
 ) : Comparable<Artifact> {
-    private val comparableVersion = if (version == null) null else ComparableVersion(version)
+    private val comparableVersion = ComparableVersion(version)
+    val hash = Hashing.getSha256(data)
 
     override fun compareTo(other: Artifact): Int {
         return comparableVersion.compareTo(other.comparableVersion)
@@ -20,12 +21,12 @@ data class Artifact(
 
         other as Artifact
 
-        if (fileName != other.fileName) return false
+        if (hash != other.hash) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return fileName.hashCode()
+        return hash.hashCode()
     }
 }

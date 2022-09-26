@@ -6,17 +6,10 @@ import org.springframework.boot.context.properties.ConstructorBinding
 @ConstructorBinding
 @ConfigurationProperties(prefix = "poller")
 data class PollerProperties(
-    val mavenRepo: MavenRepo,
-    val bootstrap: Bootstrap
+    val mavenRepo: MavenRepo
 ) {
     @ConstructorBinding
     data class MavenRepo(
-        val cron: String,
-        val url: String
-    )
-
-    @ConstructorBinding
-    data class Bootstrap(
         val cron: String,
         val url: String
     )

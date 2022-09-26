@@ -1,12 +1,14 @@
 package com.github.buracc.runeliteupdatepoller.model
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement
 import org.apache.maven.artifact.versioning.ComparableVersion
 
-
+@JacksonXmlRootElement(localName = "metadata")
 data class MavenMetadata(
     val groupId: String,
     val artifactId: String,
-    val versioning: Versioning
+    val versioning: Versioning,
+    val version: String?
 ) {
     data class Versioning(
         val release: String?,

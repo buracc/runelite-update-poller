@@ -4,7 +4,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.github.buracc.runeliteupdatepoller.config.properties.PollerProperties
 import com.github.buracc.runeliteupdatepoller.model.MavenMetadata
 import com.github.buracc.runeliteupdatepoller.repository.ArtifactRepository
-import org.apache.maven.artifact.versioning.ComparableVersion
+import com.github.buracc.runeliteupdatepoller.repository.entities.Artifact
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.net.URL
@@ -13,9 +13,8 @@ import java.net.URL
 class MavenRepoPoller(
     private val mapper: XmlMapper,
     private val properties: PollerProperties,
-    private val artifactRepository: ArtifactRepository
+    private val repository: ArtifactRepository
 ) {
-
     @Scheduled(cron = "\${poller.maven-repo.cron}")
     fun pollRepoAndStoreArtifact() {
         val metadata = mapper.readValue(
@@ -24,23 +23,35 @@ class MavenRepoPoller(
         ) ?: error("Metadata was null")
         val versions = metadata.versioning.versions ?: error("Versions was null")
 
-        val latestMetadata = mapper.readValue(
-            URL("${properties.mavenRepo.url}/${versions.getLatest()}/maven-metadata.xml"),
-            MavenMetadata::class.java
+        // Releases
+        val latestRelease = versions.getLatestRelease()
+        val fileName = "client-patch-${latestRelease}.jar"
+        val releaseArtifact = Artifact(
+            fileName = fileName,
+            version = latestRelease,
+            data = URL("${properties.mavenRepo.url}/${versions.getLatestRelease()}/$fileName").readBytes()
         )
 
-        val currentVersion = currentSnapshot?.versioning?.snapshotVersions?.getLatest()?.getComparableValue()
-        val latestVersion = latestMetadata.versioning.snapshotVersions?.getLatest()?.getComparableValue() ?: error("Yo wtf?")
-
-        if (currentVersion == null || currentVersion < latestVersion) {
-            currentSnapshot = latestMetadata
+        if (repository.isNewer(releaseArtifact)) {
+            repository.save(releaseArtifact)
         }
 
-        val latestRelease = ComparableVersion(metadata.getLatestRelease())
-        if (currentRelease == null || latestRelease > currentRelease) {
-            currentRelease = latestRelease
+        // Snapshots
+        val snapshotMetadata = mapper.readValue(
+            URL("${properties.mavenRepo.url}/$latestRelease/maven-metadata.xml"),
+            MavenMetadata::class.java
+        )
+        val latestSnapshot = snapshotMetadata.versioning.snapshotVersions?.getLatest()
+            ?: error("Snapshot version could not be determined")
+        val snapshotFileName = "${snapshotMetadata.artifactId}-${latestSnapshot.value}.jar"
+        val snapshotArtifact = Artifact(
+            fileName = snapshotFileName,
+            version = snapshotMetadata.version ?: "",
+            data = URL("${properties.mavenRepo.url}/${snapshotMetadata.version}/$snapshotFileName").readBytes()
+        )
+
+        if (repository.isNewer(snapshotArtifact)) {
+            repository.save(snapshotArtifact)
         }
     }
-
-
 }
