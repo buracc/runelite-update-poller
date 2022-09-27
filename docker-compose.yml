@@ -11,3 +11,8 @@ services:
       - .env
     tty: true
     stdin_open: true
+    networks:
+      - unethicalite-docker
+networks:
+  unethicalite-docker:
+    external: true
