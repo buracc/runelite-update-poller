@@ -8,6 +8,5 @@ import org.springframework.boot.context.properties.ConstructorBinding
 data class PollerProperties(
     val cron: String,
     val url: String,
-    val cacheDirectory: String,
     val webhookUrl: String
 )

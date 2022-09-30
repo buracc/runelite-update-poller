@@ -16,6 +16,7 @@ class ArtifactRepository(
     private val objectMapper: ObjectMapper,
     private val properties: PollerProperties
 ) {
+    private val artifactsDir = "artifacts"
     private val cacheFileName = "artifacts.json"
     private val log = LoggerFactory.getLogger(javaClass)
     val artifacts = mutableMapOf<String, Artifact>()
@@ -44,7 +45,7 @@ class ArtifactRepository(
     }
 
     private fun loadCacheFile() {
-        val file = File(properties.cacheDirectory, cacheFileName)
+        val file = File(artifactsDir, cacheFileName)
         file.parentFile.mkdir()
         if (artifacts.isEmpty() && file.exists()) {
             val cache = objectMapper.readValue(
@@ -58,7 +59,7 @@ class ArtifactRepository(
     }
 
     private fun saveArtifact(artifact: Artifact) {
-        val file = File(properties.cacheDirectory, artifact.fileName)
+        val file = File(artifactsDir, artifact.fileName)
         artifacts[artifact.version] = artifact
         file.parentFile.mkdir()
         Files.write(file.toPath(), artifact.data)
@@ -66,7 +67,7 @@ class ArtifactRepository(
 
     private fun saveCacheFile() {
         Files.writeString(
-            File(properties.cacheDirectory, cacheFileName).toPath(),
+            File(artifactsDir, cacheFileName).toPath(),
             objectMapper
                 .writerWithDefaultPrettyPrinter()
                 .writeValueAsString(

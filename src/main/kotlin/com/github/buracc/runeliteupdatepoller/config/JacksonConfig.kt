@@ -32,7 +32,7 @@ class JacksonConfig {
                 .build()
         )
         .registerModule(JavaTimeModule())
-        .registerModule(SimpleModule().also { it.addDeserializer(Artifact::class.java, ArtifactDeserializer(pollerProperties)) })
+        .registerModule(SimpleModule().also { it.addDeserializer(Artifact::class.java, ArtifactDeserializer()) })
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
         .setSerializationInclusion(JsonInclude.Include.NON_NULL)
 
