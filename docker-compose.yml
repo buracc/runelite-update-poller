@@ -1,13 +1,18 @@
 version: '3'
 
 services:
-  unethicalite-discord:
+  repo-poller:
     container_name: repo-poller
     hostname: repo-poller
     build: .
     ports:
-      - "8080:8080"
+      - "8083:8083"
     env_file:
       - .env
     tty: true
     stdin_open: true
+    networks:
+      - unethicalite-docker_default
+networks:
+  unethicalite-docker_default:
+    external: true
