@@ -2,7 +2,6 @@ package com.github.buracc.runeliteupdatepoller.repository
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.buracc.runeliteupdatepoller.config.properties.PollerProperties
 import com.github.buracc.runeliteupdatepoller.repository.entities.Artifact
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.slf4j.LoggerFactory
@@ -13,8 +12,7 @@ import java.nio.file.Files
 
 @Repository
 class ArtifactRepository(
-    private val objectMapper: ObjectMapper,
-    private val properties: PollerProperties
+    private val objectMapper: ObjectMapper
 ) {
     private val artifactsDir = "artifacts"
     private val cacheFileName = "artifacts.json"
