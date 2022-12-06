@@ -6,13 +6,18 @@ services:
     hostname: repo-poller
     build: .
     ports:
-      - "8083:8083"
+      - "8083:8080"
     env_file:
       - .env
     tty: true
     stdin_open: true
+    volumes:
+      - repo-poller:/artifacts
     networks:
       - unethicalite-docker_default
 networks:
   unethicalite-docker_default:
     external: true
+
+volumes:
+  repo-poller:
