@@ -62,4 +62,28 @@ class MavenRepoPoller(
             webhookService.push(snapshotArtifact)
         }
     }
+
+    @Scheduled(cron = "\${poller.cron}")
+    fun pollVanillaRepo() {
+        val metadata = mapper.readValue(
+            URL("${properties.url}/maven-metadata.xml"),
+            MavenMetadata::class.java
+        ) ?: error("Metadata was null")
+        val versions = metadata.versioning.versions ?: error("Versions was null")
+
+        val latest = versions.getLatest()
+        val fileName = "vanilla-${latest}.jar"
+        val url = URL("${properties.vanillaUrl}/$latest/$fileName")
+        val artifact = Artifact(
+            fileName = fileName,
+            version = latest,
+            originUrl = url,
+            data = url.readBytes()
+        )
+
+        if (repository.isNewer(artifact)) {
+            repository.save(artifact)
+            webhookService.push(artifact)
+        }
+    }
 }
