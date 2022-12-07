@@ -66,7 +66,7 @@ class MavenRepoPoller(
     @Scheduled(cron = "\${poller.cron}")
     fun pollVanillaRepo() {
         val metadata = mapper.readValue(
-            URL("${properties.url}/maven-metadata.xml"),
+            URL("${properties.vanillaUrl}/maven-metadata.xml"),
             MavenMetadata::class.java
         ) ?: error("Metadata was null")
         val versions = metadata.versioning.versions ?: error("Versions was null")
