@@ -23,8 +23,9 @@ class WebhookService(
 
     fun push(artifact: Artifact) {
         try {
-            val httpEntity = HttpEntity<ArtifactDto>(artifact.toDto())
-            httpEntity.headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            val httpHeaders = HttpHeaders()
+            httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            val httpEntity = HttpEntity<ArtifactDto>(artifact.toDto(), httpHeaders)
             restTemplate.exchange(
                 URI(properties.webhookUrl),
                 HttpMethod.POST,
